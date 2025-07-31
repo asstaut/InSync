@@ -1,0 +1,63 @@
+Absolutely! Here's a consolidated list of all the curl requests you've asked for during this session, tailored for your project with JWT authentication:
+1. Register a User
+
+curl -X POST http://localhost:3000/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"Rujan", "email":"rujan@example.com", "password":"secret", "role":"student"}'
+
+2. Login User (example, assuming /api/login exists)
+
+curl -X POST http://localhost:3000/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"rujan@example.com", "password":"secret"}'
+
+3. Get Projects for Logged-in User
+
+(Return only projects the user is part of, using JWT token)
+
+curl -X GET http://localhost:3000/api/projects \
+  -H "Authorization: Bearer <your_jwt_token>"
+
+Example with your token:
+
+curl -X GET http://localhost:3000/api/projects \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjIsImVtYWlsIjoicnVqYW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MzQ0MDY0MCwiZXhwIjoxNzUzNDQ0MjQwfQ.AZHCzSjz_EPxTDAdVbNzRr1AccKuVb6ygFbrZFErKXE"
+
+4. Post a Comment to a Project
+
+curl -X POST http://localhost:3000/api/comments \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -d '{
+    "projectID": 7,
+    "commentText": "This is a test comment from curl"
+  }'
+
+5. Post a Task to a Project
+
+curl -X POST http://localhost:3000/api/tasks \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -d '{
+    "taskText": "Finish report",
+    "projectID": 7
+  }'
+
+6. Join a Project by Join Code (Using JWT Auth)
+
+curl -X POST http://localhost:3000/api/user-projects/join \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_jwt_token>" \
+  -d '{"joinCode": "YXCOI"}'
+
+Example with your token and code:
+
+curl -X POST http://localhost:3000/api/user-projects/join \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjIsImVtYWlsIjoicnVqYW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MzQ0MDY0MCwiZXhwIjoxNzUzNDQ0MjQwfQ.AZHCzSjz_EPxTDAdVbNzRr1AccKuVb6ygFbrZFErKXE" \
+  -d '{"joinCode": "YXCOI"}'
+
+7. Fetch All Projects for User (Alternative Route /allplease)
+
+curl -X GET http://localhost:3000/api/projects/allplease \
+  -H "Authorization: Bearer <your_jwt_token>"
