@@ -1,12 +1,14 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
+const updateActivityScore  = require('../middleware/score');
 
 // Create task
 router.post('/', (req, res) => {
   const { taskText, projectID, userID } = req.body;
   const stmt = db.prepare('INSERT INTO TASK (taskText, projectID, userID) VALUES (?, ?, ?)');
   const result = stmt.run(taskText, projectID, userID);
+  updateActivityScore(projectID);
   res.json({ id: result.lastInsertRowid });
 });
 
