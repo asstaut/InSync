@@ -1,0 +1,32 @@
+function findScore(req,res){
+const numberofWeeks= db.prepare(` SELECT 
+  CAST((julianday('now') - julianday(startDate)) / 7 AS INTEGER) AS weeks_passed
+FROM PROJECT
+WHERE projectID = ?;`).get(req.params.projectid);
+
+const numberofContributions = db.prepare(`SELECT COUNT(*) AS contribution_count
+FROM TASK
+WHERE userID = ?;
+`).get(req.userid);
+}
+
+
+findScore();
+
+
+funciton theScore(req,res){
+
+
+    const rows= db.prepare(`SELECT
+  u.userID,
+  COUNT(t.taskID) AS contribution_count,
+  CAST((julianday('now') - julianday(p.startDate)) / 7 AS INTEGER) AS weeks_passed
+FROM UserProject u
+LEFT JOIN TASK t ON u.userID = t.userID AND u.projectID = t.projectID
+JOIN PROJECT p ON u.projectID = p.projectID
+WHERE u.projectID = ?
+GROUP BY u.userID;
+`);
+}
+
+

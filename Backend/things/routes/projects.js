@@ -2,6 +2,10 @@ const express = require('express');
 const db = require('../db');
 const router = express.Router();
 const authenticateToken = require('../middleware/auth');
+const multer = require('multer');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 function generateJoinCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -15,31 +19,51 @@ function generateJoinCode() {
 
 console.log('📁 Project routes loaded');
 
-router.post('/', (req, res) => {
+router.post('/', upload.single('proposal'),(req, res) => {
   const {
     projectTitle,
     projectDescription,
     Semester,
     projectRepository,
     status,
-    proposal,
     userID
   } = req.body;
   console.log('hit');
   const joinCode = generateJoinCode();
+  const proposalBlob = req.file?.buffer;
 
   const stmt = db.prepare(`
     INSERT INTO PROJECT (
       projectTitle, projectDescription, Semester, projectRepository, status, proposal, joinCode
     ) VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
-  const result = stmt.run(projectTitle, projectDescription, Semester, projectRepository, status, proposal, joinCode);
+  const result = stmt.run(projectTitle, projectDescription, Semester, projectRepository, "Pending", proposalBlob, joinCode);
   const projectID = result.lastInsertRowid;
 
   db.prepare('INSERT INTO UserProject (userID, projectID) VALUES (?, ?)').run(userID, projectID);
 
   res.json({ projectID, joinCode });
 });
+
+router.get('/:projectID/proposal', (req, res) => {
+  const projectID = req.params.projectID;
+  
+  const row = db.prepare('SELECT proposal FROM PROJECT WHERE projectID = ?').get(projectID);
+  
+  if (!row || !row.proposal) {
+    return res.status(404).json({ error: 'PDF not found' });
+  }
+  
+  // Set content headers for PDF
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline; filename="proposal.pdf"');
+  
+  // Send the raw PDF buffer
+  res.send(row.proposal);
+});
+
+
+
 
 // Get all projects
 router.get('/allplease', (req, res) => {
@@ -65,6 +89,7 @@ router.get('/', authenticateToken, (req, res) => {
     res.status(500).json({ error: 'Failed to fetch projects' });
   }
 });
+
 
 
 
