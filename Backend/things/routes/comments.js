@@ -18,7 +18,11 @@ router.get('/', (req, res) => {
 
 // Get comments by project
 router.get('/project/:projectID', (req, res) => {
-  const rows = db.prepare('SELECT * FROM COMMENT WHERE projectID = ?').all(req.params.projectID);
+  //const rows = db.prepare('SELECT * FROM COMMENT WHERE projectID = ?').all(req.params.projectID);
+
+  const rows =db.prepare(`
+  select u.username, c.userid ,c.createdAt from  COMMENT c join  USERS u on c.userID = u.userid where c.projectId = ? 
+  `).all(req.params.projectID);
   res.json(rows);
 });
 
@@ -31,8 +35,13 @@ router.put('/:id', (req, res) => {
 
 // Delete comment
 router.delete('/:id', (req, res) => {
+
+
+  
   db.prepare('DELETE FROM COMMENT WHERE commentID = ?').run(req.params.id);
   res.sendStatus(200);
 });
 
 module.exports = router;
+
+

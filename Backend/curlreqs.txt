@@ -40,8 +40,11 @@ curl -X POST http://localhost:3000/api/tasks \
   -H "Authorization: Bearer <your_jwt_token>" \
   -d '{
     "taskText": "Finish report",
-    "projectID": 7
+    "projectID": 1,
+    "userID":2
   }'
+
+
 
 6. Join a Project by Join Code (Using JWT Auth)
 
@@ -61,3 +64,15 @@ curl -X POST http://localhost:3000/api/user-projects/join \
 
 curl -X GET http://localhost:3000/api/projects/allplease \
   -H "Authorization: Bearer <your_jwt_token>"
+
+
+8 Fetch tasks for one project (same for comments "api/comments/...)
+curl "http://localhost:3000/api/tasks/project/projectId" \
+  -H "Authorization: Bearer <your_jwt_token>"
+
+  curl "http://localhost:3000/project/projectID:1" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjIsImVtYWlsIjoicnVqYW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1NDAyODcwNSwiZXhwIjoxNzU0MDMyMzA1fQ.wdbJftTyjCEHc6s6G-zN_EZ32H-vjg0QoKLzkC7rcks"
+curl "http://localhost:3000/api/tasks/project/1" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOjIsImVtYWlsIjoicnVqYW5AZXhhbXBsZS5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1NDAyODcwNSwiZXhwIjoxNzU0MDMyMzA1fQ.wdbJftTyjCEHc6s6G-zN_EZ32H-vjg0QoKLzkC7rcks"
+
+

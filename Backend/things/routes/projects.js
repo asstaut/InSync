@@ -99,14 +99,14 @@ router.get('/:id', (req, res) => {
   res.json(row);
 });
 
-// Update project
+// Update project verify the sender is a teacher in the frontend
 router.put('/:id', (req, res) => {
-  const { projectTitle, projectDescription, Semester, projectRepository, status, proposal } = req.body;
+  const { status} = req.body;
   db.prepare(`
     UPDATE PROJECT SET
-      projectTitle = ?, projectDescription = ?, Semester = ?, projectRepository = ?, status = ?, proposal = ?
+     status = ?
     WHERE projectID = ?
-  `).run(projectTitle, projectDescription, Semester, projectRepository, status, proposal, req.params.id);
+  `).run(status, req.params.id);
   res.sendStatus(200);
 });
 

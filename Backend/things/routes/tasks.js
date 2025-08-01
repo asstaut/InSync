@@ -1,14 +1,12 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
-const updateActivityScore  = require('../middleware/score');
 
 // Create task
 router.post('/', (req, res) => {
   const { taskText, projectID, userID } = req.body;
   const stmt = db.prepare('INSERT INTO TASK (taskText, projectID, userID) VALUES (?, ?, ?)');
   const result = stmt.run(taskText, projectID, userID);
-  updateActivityScore(projectID);
   res.json({ id: result.lastInsertRowid });
 });
 
@@ -20,7 +18,11 @@ router.get('/', (req, res) => {
 
 // Get tasks by project
 router.get('/project/:projectID', (req, res) => {
-  const rows = db.prepare('SELECT * FROM TASK WHERE projectID = ?').all(req.params.projectID);
+  console.log("hit");
+  const rows =db.prepare(`
+  select u.username, c.userid ,c.createdAt from  TASK c join  USERS u on c.userID = u.userid where c.projectId = ? 
+  `).all(req.params.projectID);
+  //const rows = db.prepare('SELECT * FROM TASK WHERE projectID = ?').all(req.params.projectID);
   res.json(rows);
 });
 
