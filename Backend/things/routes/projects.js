@@ -99,6 +99,30 @@ router.get('/:id', (req, res) => {
   res.json(row);
 });
 
+
+//COMEPLTED PROJECTS
+router.get('/completed', authenticateToken, (req, res) => {
+  const userID = req.user.userID;
+
+  try {
+    const stmt = db.prepare(`
+      SELECT p.*
+      FROM PROJECT p
+      JOIN UserProject up ON p.projectID = up.projectID 
+      WHERE up.userID = ? AND status="completed"
+    `);
+    const projects = stmt.all(userID);
+
+    res.json(projects);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch projects' });
+  }
+});
+
+
+
+
 // Update project verify the sender is a teacher in the frontend
 router.put('/:id', (req, res) => {
   const { status} = req.body;
