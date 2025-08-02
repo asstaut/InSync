@@ -8,16 +8,58 @@ import { Input } from "@/components/ui/input"
 import Link from "next/link"
 
 export default function SignUpPage() {
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+    const handleSignUp = async () => {
+    setError(null)
+    setSuccess(null)
+
+    if (!username || !email || !password || !confirmPassword || !role) {
+      setError("Please fill in all fields.")
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.")
+      return
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password, role }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Signup failed.")
+        return
+      }
+
+      setSuccess("Signup successful! Redirecting to login...")
+      setTimeout(() => {
+        window.location.href = "/login"
+      }, 2000)
+    } catch (err) {
+      console.error(err)
+      setError("Something went wrong. Please try again later.")
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          {/* Cloud Logo */}
           <div className="inline-flex items-center justify-center mb-4">
             <div className="relative">
               <div className="w-16 h-16 bg-teal-400 rounded-full opacity-80"></div>
@@ -34,9 +76,18 @@ export default function SignUpPage() {
             </div>
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">Insync</h1>
-        </div>
-        
+        </div>          
+
         <div className="space-y-4">
+
+          <Input
+            type="username"
+            placeholder="Enter your username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="bg-gray-50 border-gray-200 placeholder:text-gray-500"
+          />
+
           <Input
             type="email"
             placeholder="Enter your gmail"
@@ -60,22 +111,31 @@ export default function SignUpPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="bg-gray-50 border-gray-200 placeholder:text-gray-500"
           />
-          <div>
-              <Label htmlFor="role" className="text-sm text-gray-600 mb-2 block">
-                Select you role
-              </Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-w-sm">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="supervisor">Supervisor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
-          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg mt-6">Sign Up</Button>
+          <div>
+            <Label htmlFor="role" className="text-sm text-gray-600 mb-2 block">
+              Select your role
+            </Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-w-sm">
+                <SelectValue placeholder="Select your role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="supervisor">Supervisor</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
+          {success && <p className="text-sm text-green-600">{success}</p>}
+
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg mt-6"
+            onClick={handleSignUp}
+          >
+            Sign Up
+          </Button>
 
           <p className="text-center text-sm text-gray-600 mt-4">
             Already have an account?{" "}
