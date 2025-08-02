@@ -5,7 +5,16 @@ const authenticateToken = require('../middleware/auth');
 const multer = require('multer');
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === 'application/pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only PDF files are allowed!'), false);
+  }
+};
+
+const upload = multer({ storage, fileFilter });
 
 function generateJoinCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -32,6 +41,9 @@ router.post('/', upload.single('proposal'),(req, res) => {
   const joinCode = generateJoinCode();
   const proposalBlob = req.file?.buffer;
 
+  if(!proposalBlob)
+  {console.log("helpo");}
+
   const stmt = db.prepare(`
     INSERT INTO PROJECT (
       projectTitle, projectDescription, Semester, projectRepository, status, proposal, joinCode
@@ -44,25 +56,6 @@ router.post('/', upload.single('proposal'),(req, res) => {
 
   res.json({ projectID, joinCode });
 });
-
-router.get('/:projectID/proposal', (req, res) => {
-  const projectID = req.params.projectID;
-  
-  const row = db.prepare('SELECT proposal FROM PROJECT WHERE projectID = ?').get(projectID);
-  
-  if (!row || !row.proposal) {
-    return res.status(404).json({ error: 'PDF not found' });
-  }
-  
-  // Set content headers for PDF
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'inline; filename="proposal.pdf"');
-  
-  // Send the raw PDF buffer
-  res.send(row.proposal);
-});
-
-
 
 
 // Get all projects
