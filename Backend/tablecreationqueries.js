@@ -19,14 +19,13 @@ db.exec(`
     status TEXT NOT NULL,
     proposal BLOB NOT NULL,
     joinCode TEXT UNIQUE,
-    projectScore INTERGER,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP  
+    projectScore INTERGER
   );
 
   CREATE TABLE IF NOT EXISTS UserProject (
     userID INTEGER,
     projectID INTEGER,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
+    createdAt DATETIME DEFAULT (datetime('now', 'localtime')),
     activityScore INTEGER DEFAULT 1,
     PRIMARY KEY (userID, projectID),
     FOREIGN KEY (userID) REFERENCES USERS(userid) ON DELETE CASCADE,
@@ -38,7 +37,7 @@ db.exec(`
     userID INTEGER,
     projectID INTEGER,
     commentText TEXT,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
+    createdAt DATETIME DEFAULT (datetime('now', 'localtime')),
     FOREIGN KEY (userID) REFERENCES USERS(userid) ON DELETE SET NULL,
     FOREIGN KEY (projectID) REFERENCES PROJECT(projectID) ON DELETE CASCADE
   );
@@ -48,7 +47,7 @@ db.exec(`
     taskText TEXT NOT NULL,
     projectID INTEGER,
     userID INTEGER,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP, 
+    createdAt DATETIME DEFAULT (datetime('now', 'localtime')), 
     FOREIGN KEY (userID) REFERENCES USERS(userid) ON DELETE SET NULL,
     FOREIGN KEY (projectID) REFERENCES PROJECT(projectID) ON DELETE CASCADE
   );

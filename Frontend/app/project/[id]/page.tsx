@@ -84,7 +84,7 @@ export default function ProjectPage() {
 
   // Comments state
   const [comments, setComments] = useState<Comment[]>([]);
-const [newComment, setNewComment] = useState("");
+  const [newComment, setNewComment] = useState("");
 
   // Members state
   const [members, setMembers] = useState<Member[]>([]);
@@ -198,6 +198,18 @@ const [newComment, setNewComment] = useState("");
   }, [projectId]);
 
   useEffect(() => {
+  if (!projectId) return;
+
+  fetchComments(); // fetch initially
+
+  const interval = setInterval(() => {
+    fetchComments(); // fetch every 5 seconds
+  }, 500); // adjust interval as needed
+
+  return () => clearInterval(interval); // cleanup
+}, [projectId]);
+
+  useEffect(() => {
     const fetchMembers = async () => {
       try {
         const response = await fetch(
@@ -230,15 +242,15 @@ const [newComment, setNewComment] = useState("");
     if (projectId) fetchMembers();
   }, [projectId]);
 
-  useEffect(() => {
   const fetchComments = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/comments/project/${projectId}`,
+      const res = await fetch(
+        `http://localhost:5000/api/comments/project/${projectId}`,
         {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
       );
       if (!res.ok) throw new Error("Failed to fetch comments");
       const data = await res.json();
@@ -246,7 +258,7 @@ const [newComment, setNewComment] = useState("");
       const formattedComments: Comment[] = data.map((item: any) => ({
         id: item.commentID,
         author: item.username,
-        role: item.role,
+        role: item.Role,
         content: item.commentText,
         timestamp: new Date(item.createdAt).toLocaleString(),
       }));
@@ -257,8 +269,11 @@ const [newComment, setNewComment] = useState("");
     }
   };
 
-  fetchComments();
-}, [projectId]);
+  useEffect(() => {
+    if (projectId) {
+      fetchComments();
+    }
+  }, [projectId]);
 
   if (loading) return <p>Loading...</p>;
   if (!currentProject) return <p>Project not found.</p>;
@@ -276,41 +291,20 @@ const [newComment, setNewComment] = useState("");
       setShowAddForm(false);
     }
   };
-  {
-    /*
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      const comment: Comment = {
-        id: Date.now(),
-        author: "Current User", // In real app, this would be the logged-in user
-        role: "student", // This would be determined by the user's role
-        content: newComment.trim(),
-        timestamp: new Date().toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        }),
-      }
-      setComments([...comments, comment])
-      setNewComment("")
-    }
-  }
-*/
-  }
+
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
-
-    // Example: use real values in a real app
-    const userID = 1; // Replace with actual logged-in user ID
-    const projectID = 2; // Replace with the active project ID
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    const decoded = jwtDecode<JwtPayload>(token);
+    const userID = decoded.userID;
+    const projectID = projectId;
 
     try {
-      const res = await fetch("http://localhost:5000/api/comments", {
+      const res = await fetch("http://localhost:5000/api/comments/", {
         method: "POST",
         headers: {
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -320,30 +314,10 @@ const [newComment, setNewComment] = useState("");
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to add comment");
-      }
+      if (!res.ok) throw new Error("Failed to add comment");
 
-      const { id } = await res.json();
-
-      // Build the comment locally with the returned id
-      const comment: Comment = {
-        id,
-        author: "Current User", // Ideally fetched from user context
-        role: "student",
-        content: newComment.trim(),
-        timestamp: new Date().toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        }),
-      };
-
-      setComments([...comments, comment]);
       setNewComment("");
+      fetchComments();
     } catch (error) {
       console.error("Error adding comment:", error);
       alert("Failed to add comment. Please try again.");
@@ -357,15 +331,45 @@ const [newComment, setNewComment] = useState("");
     }
   };
 
-  const handleRemoveMember = (memberId: number) => {
-    if (
-      window.confirm(
-        "Are you sure you want to remove this member from the project?"
-      )
-    ) {
-      setMembers(members.filter((member) => member.id !== memberId));
+const handleRemoveMember = async (memberId: number) => {
+  if (
+    window.confirm(
+      "Are you sure you want to remove this member from the project?"
+    )
+  ) {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You must be logged in to perform this action.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/user-projects/", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          userID: memberId,
+          projectID: projectId, // assuming you have projectId from somewhere
+        }),
+      });
+
+      if (response.ok) {
+        // Remove member from state
+        setMembers((prevMembers) =>
+          prevMembers.filter((member) => member.id !== memberId)
+        );
+      } else {
+        alert("Failed to remove member from the project.");
+      }
+    } catch (error) {
+      console.error("Error removing member:", error);
+      alert("An error occurred while removing the member.");
     }
-  };
+  }
+};
 
   const renderTabContent = () => {
     switch (activeTab) {
