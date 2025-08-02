@@ -22,6 +22,20 @@ export default function CreateProjectPage() {
 const [proposalFile, setProposalFile] = useState<File | null>(null)
 const [userID, setUserID] = useState<string | null>(null)
 
+const getOrdinal = (n: number) => {
+  if (n === 1) return "1st"
+  if (n === 2) return "2nd"
+  if (n === 3) return "3rd"
+  return `${n}th`
+}
+
+const formatSemester = (sem: string): string => {
+  const semNum = parseInt(sem)
+  const year = Math.ceil(semNum / 2)
+  const semInYear = semNum % 2 === 0 ? 2 : 1
+  return `${getOrdinal(year)} Year ${getOrdinal(semInYear)} Sem`
+}
+
 useEffect(() => {
     const id = getUserIDFromToken()
     setUserID(id)
@@ -42,7 +56,7 @@ const handleCreateProject = async () => {
   formData.append("userID", userID)
   formData.append("projectTitle", projectTitle)
   formData.append("projectDescription", projectDetails)
-  formData.append("Semester", semester)
+  formData.append("Semester", formatSemester(semester))
   formData.append("projectRepository", repositoryLink)
   formData.append("status", "Pending")
   formData.append("proposal", proposalFile) // ⬅ actual file content

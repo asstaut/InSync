@@ -87,7 +87,7 @@ useEffect(() => {
       const rawData = await res.json()
       const formatted = rawData.map((p: any) => ({
         title: p.projectTitle,
-        semester: p.semester,
+        semester: p.Semester,
         projectId: p.projectID,
       }))
       setProjects(formatted)
