@@ -15,9 +15,13 @@ interface Props {
     proposal?: any;
   };
   onOpenProposal: () => void;
+  isSupervisor: boolean;
+  onChangeStatus : () => void;
 }
 
-export default function ProjectTab({ project, onOpenProposal }: Props) {
+export default function ProjectTab({ project, onOpenProposal,isSupervisor, onChangeStatus }: Props) {
+    console.log(isSupervisor)
+    
   return (
     <div className="space-y-6">
       <Card className="bg-teal-50 border-teal-200">
@@ -75,32 +79,54 @@ export default function ProjectTab({ project, onOpenProposal }: Props) {
               </div>
 
               <div>
-                <h5 className="font-medium text-sm text-gray-900 mb-2">
-                  Proposal Status
-                </h5>
-                <div className="space-y-2">
-                  <Badge
-                    variant="secondary"
-                    className={
-                      project.status === "Submitted"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-orange-100 text-orange-800"
-                    }
-                  >
-                    {project.status}
-                  </Badge>
-                  <div className="space-y-1">
-                    {project.proposal ? (
-                      <Button onClick={onOpenProposal}>View Proposal</Button>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        No proposal file available
-                      </p>
-                    )}
-                  </div>
-                </div>
+  {/* Proposal Status Row */}
+  <div className="flex items-center gap-2 mb-2">
+  <h5 className="font-medium text-sm text-gray-900">Proposal Status:</h5>
+  <Badge
+    variant="secondary"
+    className={
+      project.status === "Submitted"
+        ? "bg-green-100 text-green-800"
+        : project.status === "Approve"
+        ? "bg-blue-100 text-blue-800"
+        : project.status === "Complete"
+        ? "bg-gray-200 text-gray-600"
+        : "bg-orange-100 text-orange-800"
+    }
+  >
+    {project.status}
+  </Badge>
+
+  {isSupervisor && project.status !== "Complete" && (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={onChangeStatus}
+    >
+      {project.status === "Pending"
+        ? "Mark as Approve"
+        : project.status === "Approve"
+        ? "Mark as Complete"
+        : null}
+    </Button>
+  )}
+</div>
+
+
+  <h5 className="font-medium text-sm text-gray-900 mb-2">Proposal</h5>
+
+  <div className="space-y-1">
+    {project.proposal ? (
+      <Button onClick={onOpenProposal}>View Proposal</Button>
+    ) : (
+      <p className="text-sm text-gray-500">No proposal file available</p>
+    )}
+  </div>
+</div>
+
               </div>
-            </div>
+              
+
           </div>
         </CardContent>
       </Card>

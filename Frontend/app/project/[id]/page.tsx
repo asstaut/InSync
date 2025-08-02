@@ -5,11 +5,11 @@ import { useState, useEffect } from "react";
 import { Layout } from "../../../components/layout";
 import ProjectTab from "../../../components/project-tab/project";
 import { ProjectTabs } from "../../../components/project-tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { CommentSection } from "@/components/project-tab/comment";
+import { MembersSection } from "@/components/project-tab/members";
 import {
   Table,
   TableBody,
@@ -18,8 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Send, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 
@@ -56,14 +55,6 @@ type Member = {
   Role: string;
   activityScore: number;
 };
-
-interface Comment {
-  id: number;
-  author: string;
-  role: "supervisor" | "student";
-  content: string;
-  timestamp: string;
-}
 
 export default function ProjectPage() {
   const params = useParams();
@@ -197,86 +188,60 @@ export default function ProjectPage() {
     fetchProject();
   }, [projectId]);
 
-  useEffect(() => {
-  if (!projectId) return;
-
-  fetchComments(); // fetch initially
-
-  const interval = setInterval(() => {
-    fetchComments(); // fetch every 5 seconds
-  }, 500); // adjust interval as needed
-
-  return () => clearInterval(interval); // cleanup
-}, [projectId]);
-
-  useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:5000/api/user-projects/project/${projectId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        const data = await response.json();
-        console.log("Fetched members:", data);
-
-        const formattedMembers: Member[] = data.map((member: any) => ({
-          id: member.userid,
-          name: member.username,
-          Role: member.Role ? member.Role.toLowerCase() : "unknown", // ensure it's lowercase
-          activityScore: member.activityScore,
-        }));
-
-        setMembers(formattedMembers);
-        setSupervisors(formattedMembers.filter((m) => m.Role === "supervisor"));
-        setStudents(formattedMembers.filter((m) => m.Role === "student"));
-      } catch (error) {
-        console.error("Error fetching members:", error);
-      }
-    };
-
-    if (projectId) fetchMembers();
-  }, [projectId]);
-
-  const fetchComments = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/comments/project/${projectId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      if (!res.ok) throw new Error("Failed to fetch comments");
-      const data = await res.json();
-
-      const formattedComments: Comment[] = data.map((item: any) => ({
-        id: item.commentID,
-        author: item.username,
-        role: item.Role,
-        content: item.commentText,
-        timestamp: new Date(item.createdAt).toLocaleString(),
-      }));
-
-      setComments(formattedComments);
-    } catch (err) {
-      console.error("Error fetching comments:", err);
-    }
-  };
-
-  useEffect(() => {
-    if (projectId) {
-      fetchComments();
-    }
-  }, [projectId]);
-
   if (loading) return <p>Loading...</p>;
   if (!currentProject) return <p>Project not found.</p>;
+
+  async function handleChangeStatus() {
+  if (!projectId) {
+    alert("Project ID is missing");
+    return;
+  }
+
+  let nextStatus: string | null = null;
+
+  switch (currentProject.status) {
+    case "Pending":
+      nextStatus = "Approve";
+      break;
+    case "Approve":
+      nextStatus = "Complete";
+      break;
+    default:
+      nextStatus = null; // no change for Complete or others
+  }
+
+  if (!nextStatus) return; // no update needed
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You are not authenticated.");
+      return;
+    }
+
+    const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status: nextStatus }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to update project status");
+    }
+
+    alert(`Status updated to ${nextStatus}`);
+
+    // Optionally update local state so UI updates immediately:
+    setCurrentProject((prev: any) => prev ? { ...prev, status: nextStatus } : prev);
+  } catch (error) {
+    console.error(error);
+    alert("An error occurred while updating status");
+  }
+}
+
 
   const handleAddWorkLog = () => {
     if (newDate && newTask) {
@@ -292,85 +257,6 @@ export default function ProjectPage() {
     }
   };
 
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    const decoded = jwtDecode<JwtPayload>(token);
-    const userID = decoded.userID;
-    const projectID = projectId;
-
-    try {
-      const res = await fetch("http://localhost:5000/api/comments/", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userID,
-          projectID,
-          commentText: newComment.trim(),
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to add comment");
-
-      setNewComment("");
-      fetchComments();
-    } catch (error) {
-      console.error("Error adding comment:", error);
-      alert("Failed to add comment. Please try again.");
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleAddComment();
-    }
-  };
-
-const handleRemoveMember = async (memberId: number) => {
-  if (
-    window.confirm(
-      "Are you sure you want to remove this member from the project?"
-    )
-  ) {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must be logged in to perform this action.");
-        return;
-      }
-
-      const response = await fetch("http://localhost:5000/api/user-projects/", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          userID: memberId,
-          projectID: projectId, // assuming you have projectId from somewhere
-        }),
-      });
-
-      if (response.ok) {
-        // Remove member from state
-        setMembers((prevMembers) =>
-          prevMembers.filter((member) => member.id !== memberId)
-        );
-      } else {
-        alert("Failed to remove member from the project.");
-      }
-    } catch (error) {
-      console.error("Error removing member:", error);
-      alert("An error occurred while removing the member.");
-    }
-  }
-};
-
   const renderTabContent = () => {
     switch (activeTab) {
       case "project":
@@ -378,105 +264,12 @@ const handleRemoveMember = async (memberId: number) => {
           <ProjectTab
             project={currentProject}
             onOpenProposal={openProposalFromBuffer}
+            isSupervisor={isCurrentUserSupervisor}
+            onChangeStatus={handleChangeStatus}
           />
         );
       case "comments":
-        return (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Comments</h3>
-              <span className="text-sm text-gray-500">
-                {comments.length} comments
-              </span>
-            </div>
-
-            {/* Comments List */}
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {comments.length === 0 ? (
-                <div className="flex items-center justify-center h-32 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <p className="text-gray-500 text-sm">No comments yet</p>
-                </div>
-              ) : (
-                comments.map((comment) => (
-                  <Card key={comment.id} className="bg-gray-50">
-                    <CardContent className="p-4">
-                      <div className="flex items-start space-x-3">
-                        <Avatar className="w-8 h-8 bg-gray-300">
-                          <AvatarFallback className="text-gray-600 text-xs font-medium">
-                            {comment.author
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-medium text-sm text-gray-900">
-                              {comment.author}
-                            </span>
-                            <Badge
-                              variant="secondary"
-                              className={`text-xs ${
-                                comment.role === "supervisor"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-green-100 text-green-800"
-                              }`}
-                            >
-                              {comment.role}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              {comment.timestamp}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-700">
-                            {comment.content}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-
-            {/* Add Comment Form */}
-            <Card className="bg-white border-2 border-teal-200">
-              <CardContent className="p-4">
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <Avatar className="w-8 h-8 bg-blue-500">
-                      <AvatarFallback className="text-white text-xs font-medium">
-                        CU
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <Textarea
-                        placeholder="Add a comment..."
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="min-h-[80px] resize-none border-gray-200 focus:border-teal-500"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-gray-500">
-                      Press Enter to send, Shift+Enter for new line
-                    </p>
-                    <Button
-                      onClick={handleAddComment}
-                      disabled={!newComment.trim()}
-                      className="bg-teal-600 hover:bg-teal-700"
-                    >
-                      <Send className="w-4 h-4 mr-2" />
-                      Send
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <CommentSection projectId={projectId as string} />;
       case "worklog":
         return (
           <div className="space-y-4">
@@ -577,87 +370,10 @@ const handleRemoveMember = async (memberId: number) => {
         );
       case "members":
         return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">
-                Team Members
-              </h3>
-            </div>
-
-            {/* Supervisor Section */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                Supervisor ({supervisors.length})
-              </h3>
-              <div className="space-y-3">
-                {supervisors.map((supervisor) => (
-                  <div
-                    key={supervisor.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-10 h-10 bg-gray-300">
-                        <AvatarFallback className="text-gray-600 font-medium">
-                          {supervisor.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-gray-900 font-medium">
-                        {supervisor.name}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Students Section */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                Students ({students.length})
-              </h3>
-              <div className="space-y-3">
-                {students.map((student) => (
-                  <div
-                    key={student.id}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-10 h-10 bg-gray-300">
-                        <AvatarFallback className="text-gray-600 font-medium">
-                          {student.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="text-gray-900 font-medium">
-                          {student.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Score: {student.activityScore}
-                        </div>
-                      </div>
-                    </div>
-
-                    {isCurrentUserSupervisor && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveMember(student.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <MembersSection
+            projectId={projectId as string}
+            isSupervisor={isCurrentUserSupervisor}
+          />
         );
 
       default:

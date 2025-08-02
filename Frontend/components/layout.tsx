@@ -6,6 +6,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Archive, Settings } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
+import { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+
+type JwtPayload = {
+ username: string;
+  email: string;
+  role: string;
+};
+
 
 interface LayoutProps {
   children: React.ReactNode
@@ -24,6 +33,17 @@ export function Layout({ children, title, userRole = "Student" }: LayoutProps) {
   const isActive = (path: string) => {
     return pathname === path
   }
+  const [showPopup, setShowPopup] = useState(false);
+const [user, setUser] = useState<JwtPayload | null>(null);
+
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    const decoded = jwtDecode<JwtPayload>(token);
+    setUser(decoded);
+  }
+}, []);
+
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -45,11 +65,33 @@ export function Layout({ children, title, userRole = "Student" }: LayoutProps) {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Avatar className="w-8 h-8 bg-blue-500">
-              <AvatarFallback className="text-white text-sm font-medium">S</AvatarFallback>
-            </Avatar>
-          </div>
+          <div className="relative">
+  <div
+    className="flex items-center space-x-2 cursor-pointer"
+    onClick={() => setShowPopup(!showPopup)}
+  >
+    <Avatar className="w-8 h-8 bg-blue-500">
+      <AvatarFallback className="text-white text-sm font-medium">
+        {user?.email?.[0]?.toUpperCase() || "U"}
+      </AvatarFallback>
+    </Avatar>
+  </div>
+
+  {showPopup && user && (
+    <div className="absolute right-0 mt-2 w-64 bg-white shadow-md rounded-xl z-50 p-4">
+      <p className="text-sm text-gray-700">
+        <span className="font-semibold">Username:</span> {user.username}
+      </p>
+      <p className="text-sm text-gray-700">
+        <span className="font-semibold">Email:</span> {user.email}
+      </p>
+      <p className="text-sm text-gray-700">
+        <span className="font-semibold">Role:</span> {user.role}
+      </p>
+    </div>
+  )}
+</div>
+
         </div>
       </header>
 
