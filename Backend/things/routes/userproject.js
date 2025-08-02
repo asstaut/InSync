@@ -14,8 +14,9 @@ router.post('/', (req, res) => {
 
 // Get users in a project
 router.get('/project/:projectID', (req, res) => {
+  console.log('hit');
   const rows = db.prepare(`
-    SELECT u.userid, u.username, u.role FROM USERS u
+    SELECT u.userid, u.username, u.role, up.activityScore FROM USERS u
     JOIN UserProject up ON u.userid = up.userID
     WHERE up.projectID = ?
   `).all(req.params.projectID);

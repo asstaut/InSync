@@ -21,7 +21,7 @@ router.get('/project/:projectID', (req, res) => {
   //const rows = db.prepare('SELECT * FROM COMMENT WHERE projectID = ?').all(req.params.projectID);
 
   const rows =db.prepare(`
-  select u.username, c.userid ,c.createdAt from  COMMENT c join  USERS u on c.userID = u.userid where c.projectId = ? 
+  select c.commentID, u.username, c.createdAt, c.commentText, u.role from  COMMENT c join  USERS u on c.userID = u.userid where c.projectId = ? 
   `).all(req.params.projectID);
   res.json(rows);
 });
