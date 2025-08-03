@@ -72,9 +72,10 @@ router.get('/', authenticateToken, (req, res) => {
       SELECT p.*
       FROM PROJECT p
       JOIN UserProject up ON p.projectID = up.projectID
-      WHERE up.userID = ?
+      WHERE up.userID = ? and p.status != 'Complete'
     `);
     const projects = stmt.all(userID);
+    console.log(projects);
 
     res.json(projects);
   } catch (err) {
@@ -87,22 +88,19 @@ router.get('/', authenticateToken, (req, res) => {
 
 
 // Get one project
-router.get('/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM PROJECT WHERE projectID = ?').get(req.params.id);
-  res.json(row);
-});
 
-
+console.log("1");
 //COMEPLTED PROJECTS
 router.get('/completed', authenticateToken, (req, res) => {
+console.log("2");
   const userID = req.user.userID;
 
   try {
     const stmt = db.prepare(`
       SELECT p.*
       FROM PROJECT p
-      JOIN UserProject up ON p.projectID = up.projectID 
-      WHERE up.userID = ? AND status="completed"
+      JOIN UserProject up ON p.projectID = up.projectID
+      WHERE up.userID = ? AND p.status='Complete'
     `);
     const projects = stmt.all(userID);
 
@@ -113,6 +111,10 @@ router.get('/completed', authenticateToken, (req, res) => {
   }
 });
 
+router.get('/:id', (req, res) => {
+  const row = db.prepare('SELECT * FROM PROJECT WHERE projectID = ?').get(req.params.id);
+  res.json(row);
+});
 
 
 
