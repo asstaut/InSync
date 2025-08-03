@@ -4,9 +4,17 @@ const db = require('../db');
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-
   console.log("help");
   const { username, email, password, role } = req.body;
+
+  // Password validation regex:
+  const passwordRegex = /^(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
+  if (!passwordRegex.test(password)) {
+    return res.status(400).json({
+      error: 'Password must be at least 8 characters long and include at least one number and one symbol.'
+    });
+  }
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,3 +32,4 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
+

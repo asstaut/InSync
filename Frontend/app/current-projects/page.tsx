@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import type React from "react";
 import { Layout } from "../../components/layout";
@@ -22,6 +23,7 @@ interface ProjectCardWithMenuProps {
   projectId: string;
   onArchive: (projectId: string) => void;
   onDelete: (projectId: string) => void;
+  isSupervisor: boolean;
 }
 
 type JwtPayload = {
@@ -36,6 +38,7 @@ function ProjectCardWithMenu({
   projectId,
   onArchive,
   onDelete,
+  isSupervisor,
 }: ProjectCardWithMenuProps) {
   const router = useRouter();
 
@@ -76,13 +79,15 @@ function ProjectCardWithMenu({
                 <Archive className="w-4 h-4 mr-2" />
                 Archive
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleDelete}
-                className="text-red-600 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
+              {isSupervisor && (
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -128,15 +133,13 @@ export default function CurrentProjectsPage() {
     };
 
     const checkRole = () => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
-        if (token) {
-          try {
-            const decoded = jwtDecode<JwtPayload>(token);
-            setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
-          } catch (err) {
-            console.error("Failed to decode token", err);
-          }
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const decoded = jwtDecode<JwtPayload>(token);
+          setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
+        } catch (err) {
+          console.error("Failed to decode token", err);
         }
       }
     };
@@ -154,16 +157,38 @@ export default function CurrentProjectsPage() {
     alert("Project archived successfully!");
   };
 
-  const handleDeleteProject = (projectId: string) => {
+  const handleDeleteProject = async (projectId: string) => {
     if (
-      window.confirm(
+      !window.confirm(
         "Are you sure you want to delete this project? This action cannot be undone."
       )
-    ) {
-      setProjects(
-        projects.filter((project) => project.projectId !== projectId)
-      );
+    )
+      return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Unauthorized");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to delete project");
+      }
+
+      setProjects(projects.filter((p) => p.projectId !== projectId));
       alert("Project deleted successfully!");
+    } catch (error) {
+      console.error("Delete error:", error);
+      alert("Error deleting project. Check console for details.");
     }
   };
 
@@ -180,16 +205,11 @@ export default function CurrentProjectsPage() {
     }
 
     try {
-      // Optional: decode userID if you want to use it locally (not mandatory for this request)
-      const decoded = jwtDecode<{ userID: number }>(token);
-      const userID = decoded.userID;
-      console.log("User ID from token:", userID);
-
       const response = await fetch("http://localhost:5000/api/user-projects/join", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // assuming your backend uses Bearer token in header for authenticateToken middleware
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ joinCode }),
       });
@@ -220,6 +240,7 @@ export default function CurrentProjectsPage() {
               projectId={project.projectId}
               onArchive={handleArchiveProject}
               onDelete={handleDeleteProject}
+              isSupervisor={isSupervisor}
             />
           ))}
         </div>
@@ -277,3 +298,4 @@ export default function CurrentProjectsPage() {
     </Layout>
   );
 }
+

@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import type React from "react";
 import { Layout } from "../../components/layout";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal, Archive, Trash2 } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -14,13 +13,13 @@ import {
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import * as Dialog from "@radix-ui/react-dialog";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 interface ProjectCardWithMenuProps {
   title: string;
   semester: string;
   projectId: string;
-  onArchive: (projectId: string) => void;
+  isArchived: boolean;
   onDelete: (projectId: string) => void;
 }
 
@@ -34,18 +33,13 @@ function ProjectCardWithMenu({
   title,
   semester,
   projectId,
-  onArchive,
+  isArchived,
   onDelete,
 }: ProjectCardWithMenuProps) {
   const router = useRouter();
 
   const handleCardClick = () => {
     router.push(`/project/${projectId}`);
-  };
-
-  const handleArchive = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onArchive(projectId);
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -72,10 +66,6 @@ function ProjectCardWithMenu({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={handleArchive}>
-                <Archive className="w-4 h-4 mr-2" />
-                Archive
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={handleDelete}
                 className="text-red-600 hover:text-red-700"
@@ -98,7 +88,7 @@ function ProjectCardWithMenu({
 export default function ArchivedProjects() {
   const router = useRouter();
   const [projects, setProjects] = useState<
-    { title: string; semester: string; projectId: string }[]
+    { title: string; semester: string; projectId: string; isArchived: boolean }[]
   >([]);
   const [joinCode, setJoinCode] = useState("");
   const [isSupervisor, setIsSupervisor] = useState(false);
@@ -119,26 +109,23 @@ export default function ArchivedProjects() {
           title: p.projectTitle,
           semester: p.Semester,
           projectId: p.projectID,
+          isArchived: true,
         }));
         setProjects(formatted);
       } catch (err) {
-        console.log("1");
-        console.log(err);
         console.error("Error fetching projects:", err);
         alert("Could not load projects.");
       }
     };
 
     const checkRole = () => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
-        if (token) {
-          try {
-            const decoded = jwtDecode<JwtPayload>(token);
-            setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
-          } catch (err) {
-            console.error("Failed to decode token", err);
-          }
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const decoded = jwtDecode<JwtPayload>(token);
+          setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
+        } catch (err) {
+          console.error("Failed to decode token", err);
         }
       }
     };
@@ -151,21 +138,31 @@ export default function ArchivedProjects() {
     router.push("/create-project");
   };
 
-  const handleArchiveProject = (projectId: string) => {
-    setProjects(projects.filter((project) => project.projectId !== projectId));
-    alert("Project archived successfully!");
-  };
-
-  const handleDeleteProject = (projectId: string) => {
+  const handleDeleteProject = async (projectId: string) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this project? This action cannot be undone."
+        "Are you sure you want to delete this archived project? This action cannot be undone."
       )
     ) {
-      setProjects(
-        projects.filter((project) => project.projectId !== projectId)
-      );
-      alert("Project deleted successfully!");
+      try {
+        const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+
+        if (!res.ok) throw new Error("Failed to delete project");
+
+        setProjects((prev) =>
+          prev.filter((project) => project.projectId !== projectId)
+        );
+
+        alert("Archived project deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting project:", error);
+        alert("Failed to delete project.");
+      }
     }
   };
 
@@ -182,16 +179,11 @@ export default function ArchivedProjects() {
     }
 
     try {
-      // Optional: decode userID if you want to use it locally (not mandatory for this request)
-      const decoded = jwtDecode<{ userID: number }>(token);
-      const userID = decoded.userID;
-      console.log("User ID from token:", userID);
-
       const response = await fetch("http://localhost:5000/api/user-projects/join", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // assuming your backend uses Bearer token in header for authenticateToken middleware
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ joinCode }),
       });
@@ -220,7 +212,7 @@ export default function ArchivedProjects() {
               title={project.title}
               semester={project.semester}
               projectId={project.projectId}
-              onArchive={handleArchiveProject}
+              isArchived={project.isArchived}
               onDelete={handleDeleteProject}
             />
           ))}
@@ -238,12 +230,10 @@ export default function ArchivedProjects() {
 
             <Dialog.Portal>
               <Dialog.Overlay className="fixed inset-0 bg-black opacity-50" />
-
               <Dialog.Content className="fixed top-[50%] left-[50%] max-w-md w-full p-6 bg-white rounded-md shadow-lg -translate-x-1/2 -translate-y-1/2">
                 <Dialog.Title className="text-lg font-bold mb-4">
                   Enter Join Code
                 </Dialog.Title>
-
                 <div className="mb-4">
                   <Input
                     placeholder="Project Join Code"
@@ -251,7 +241,6 @@ export default function ArchivedProjects() {
                     onChange={(e) => setJoinCode(e.target.value)}
                   />
                 </div>
-
                 <div className="flex justify-end space-x-2">
                   <Dialog.Close asChild>
                     <Button
@@ -265,6 +254,7 @@ export default function ArchivedProjects() {
               </Dialog.Content>
             </Dialog.Portal>
           </Dialog.Root>
+          {/* Show "Add a Project" button only if NOT supervisor */}
           {!isSupervisor && (
             <Button
               onClick={handleAddProject}
@@ -279,3 +269,4 @@ export default function ArchivedProjects() {
     </Layout>
   );
 }
+

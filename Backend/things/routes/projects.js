@@ -25,31 +25,36 @@ function generateJoinCode() {
   return code;
 }
 
-
 console.log('📁 Project routes loaded');
 
-router.post('/', upload.single('proposal'),(req, res) => {
+// ================= CREATE PROJECT =================
+router.post('/', upload.single('proposal'), (req, res) => {
   const {
     projectTitle,
     projectDescription,
     Semester,
     projectRepository,
-    status,
     userID
   } = req.body;
-  console.log('hit');
+
   const joinCode = generateJoinCode();
   const proposalBlob = req.file?.buffer;
-
-  if(!proposalBlob)
-  {console.log("helpo");}
 
   const stmt = db.prepare(`
     INSERT INTO PROJECT (
       projectTitle, projectDescription, Semester, projectRepository, status, proposal, joinCode
     ) VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
-  const result = stmt.run(projectTitle, projectDescription, Semester, projectRepository, "Pending", proposalBlob, joinCode);
+  const result = stmt.run(
+    projectTitle,
+    projectDescription,
+    Semester,
+    projectRepository,
+    "Pending",
+    proposalBlob,
+    joinCode
+  );
+
   const projectID = result.lastInsertRowid;
 
   db.prepare('INSERT INTO UserProject (userID, projectID) VALUES (?, ?)').run(userID, projectID);
@@ -57,8 +62,8 @@ router.post('/', upload.single('proposal'),(req, res) => {
   res.json({ projectID, joinCode });
 });
 
+// ================= GET PROJECTS =================
 
-// Get all projects
 router.get('/allplease', (req, res) => {
   const rows = db.prepare('SELECT * FROM PROJECT').all();
   res.json(rows);
@@ -72,11 +77,9 @@ router.get('/', authenticateToken, (req, res) => {
       SELECT p.*
       FROM PROJECT p
       JOIN UserProject up ON p.projectID = up.projectID
-      WHERE up.userID = ? and p.status != 'Complete'
+      WHERE up.userID = ? AND p.status != 'Complete'
     `);
     const projects = stmt.all(userID);
-    console.log(projects);
-
     res.json(projects);
   } catch (err) {
     console.error(err);
@@ -84,15 +87,7 @@ router.get('/', authenticateToken, (req, res) => {
   }
 });
 
-
-
-
-// Get one project
-
-console.log("1");
-//COMEPLTED PROJECTS
 router.get('/completed', authenticateToken, (req, res) => {
-console.log("2");
   const userID = req.user.userID;
 
   try {
@@ -100,14 +95,13 @@ console.log("2");
       SELECT p.*
       FROM PROJECT p
       JOIN UserProject up ON p.projectID = up.projectID
-      WHERE up.userID = ? AND p.status='Complete'
+      WHERE up.userID = ? AND p.status = 'Complete'
     `);
     const projects = stmt.all(userID);
-
     res.json(projects);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to fetch projects' });
+    res.status(500).json({ error: 'Failed to fetch completed projects' });
   }
 });
 
@@ -116,23 +110,56 @@ router.get('/:id', (req, res) => {
   res.json(row);
 });
 
+// ================= UPDATE PROJECT =================
 
-
-// Update project verify the sender is a teacher in the frontend
 router.put('/:id', (req, res) => {
-  const { status} = req.body;
+  const { status } = req.body;
+
   db.prepare(`
-    UPDATE PROJECT SET
-     status = ?
+    UPDATE PROJECT
+    SET status = ?
     WHERE projectID = ?
   `).run(status, req.params.id);
+
   res.sendStatus(200);
 });
 
-// Delete project
-router.delete('/:id', (req, res) => {
-  db.prepare('DELETE FROM PROJECT WHERE projectID = ?').run(req.params.id);
-  res.sendStatus(200);
+// ================= DELETE PROJECT (ARCHIVED ONLY) =================
+
+router.delete('/:id', authenticateToken, (req, res) => {
+  const userID = req.user.userID;
+  const projectID = req.params.id;
+
+  try {
+    // Ensure project is archived
+    const project = db.prepare('SELECT status FROM PROJECT WHERE projectID = ?').get(projectID);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (project.status !== 'Complete') {
+      return res.status(403).json({ error: 'Only archived (completed) projects can be deleted.' });
+    }
+
+    // Confirm user is part of the project
+    const isMember = db.prepare('SELECT * FROM UserProject WHERE userID = ? AND projectID = ?').get(userID, projectID);
+
+    if (!isMember) {
+      return res.status(403).json({ error: 'You are not authorized to delete this project.' });
+    }
+
+    // Delete related records
+    db.prepare('DELETE FROM COMMENT WHERE projectID = ?').run(projectID);
+    db.prepare('DELETE FROM UserProject WHERE projectID = ?').run(projectID);
+    db.prepare('DELETE FROM PROJECT WHERE projectID = ?').run(projectID);
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete project' });
+  }
 });
 
 module.exports = router;
+

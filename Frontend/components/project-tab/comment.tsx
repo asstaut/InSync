@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send } from "lucide-react";
+import { Send, Trash2 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 
 type JwtPayload = {
   userID: string;
   email: string;
-  role: string;
+  role: "supervisor" | "student";
 };
 
 interface Comment {
@@ -30,6 +30,9 @@ interface CommentSectionProps {
 export function CommentSection({ projectId }: CommentSectionProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
+  const [userRole, setUserRole] = useState<"supervisor" | "student" | null>(null);
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const fetchComments = async () => {
     try {
@@ -37,7 +40,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
         `http://localhost:5000/api/comments/project/${projectId}`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -59,9 +62,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   };
 
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!newComment.trim() || !token) return;
     const decoded = jwtDecode<JwtPayload>(token);
 
     try {
@@ -88,6 +89,25 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     }
   };
 
+  const handleDeleteComment = async (commentId: number) => {
+    if (!token) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to delete comment");
+      fetchComments();
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      alert("Failed to delete comment.");
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -96,11 +116,13 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   };
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId || !token) return;
 
-    fetchComments(); // initial fetch
-    const interval = setInterval(fetchComments, 500); // polling
+    const decoded = jwtDecode<JwtPayload>(token);
+    setUserRole(decoded.role);
 
+    fetchComments();
+    const interval = setInterval(fetchComments, 500);
     return () => clearInterval(interval);
   }, [projectId]);
 
@@ -144,7 +166,18 @@ export function CommentSection({ projectId }: CommentSectionProps) {
                       >
                         {comment.role}
                       </Badge>
-                      <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                      <span className="text-xs text-gray-500">
+                        {comment.timestamp}
+                      </span>
+                      {userRole === "supervisor" && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="ml-2 text-red-500 hover:text-red-700"
+                          title="Delete Comment"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                     <p className="text-sm text-gray-700">{comment.content}</p>
                   </div>
@@ -194,3 +227,4 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     </div>
   );
 }
+

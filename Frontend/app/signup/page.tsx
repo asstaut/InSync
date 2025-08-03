@@ -7,19 +7,20 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-  const router = useRouter()
-
 
 export default function SignUpPage() {
+  const router = useRouter()
+
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [role, setRole] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-    const handleSignUp = async () => {
+  const handleSignUp = async () => {
     setError(null)
     setSuccess(null)
 
@@ -34,15 +35,23 @@ export default function SignUpPage() {
     }
 
     try {
+      setLoading(true)
       const res = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password, role }),
+        body: JSON.stringify({
+          username: username.trim(),
+          email: email.trim(),
+          password,
+          role,
+        }),
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
+
+      setLoading(false)
 
       if (!res.ok) {
         setError(data.error || "Signup failed.")
@@ -50,13 +59,10 @@ export default function SignUpPage() {
       }
 
       setSuccess("Signup successful! Redirecting to login...")
-      router.push("/login");
-
-      setTimeout(() => {
-        window.location.href = "/login"
-      }, 2000)
+      router.push("/login")
     } catch (err) {
       console.error(err)
+      setLoading(false)
       setError("Something went wrong. Please try again later.")
     }
   }
@@ -81,12 +87,11 @@ export default function SignUpPage() {
             </div>
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">Insync</h1>
-        </div>          
+        </div>
 
         <div className="space-y-4">
-
           <Input
-            type="username"
+            type="text"
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -138,8 +143,9 @@ export default function SignUpPage() {
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg mt-6"
             onClick={handleSignUp}
+            disabled={loading}
           >
-            Sign Up
+            {loading ? "Signing up..." : "Sign Up"}
           </Button>
 
           <p className="text-center text-sm text-gray-600 mt-4">
@@ -153,3 +159,4 @@ export default function SignUpPage() {
     </div>
   )
 }
+
