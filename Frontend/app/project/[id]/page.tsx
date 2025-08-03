@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CommentSection } from "@/components/project-tab/comment";
 import { MembersSection } from "@/components/project-tab/members";
+import { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -28,62 +29,37 @@ type JwtPayload = {
   role: string;
 };
 
-let isCurrentUserSupervisor = false;
-
-if (typeof window !== "undefined") {
-  const token = localStorage.getItem("token");
-
-  if (token) {
-    try {
-      const decoded = jwtDecode<JwtPayload>(token);
-      isCurrentUserSupervisor = decoded.role?.toLowerCase() === "supervisor";
-    } catch (err) {
-      console.error("Failed to decode token", err);
-    }
-  }
-}
-
 interface WorkLogEntry {
   id: number;
   date: string;
   task: string;
+  author: string;
 }
 
-type Member = {
-  id: number;
-  name: string;
-  Role: string;
-  activityScore: number;
-};
-
 export default function ProjectPage() {
+  const isCurrentUserSupervisor = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+
+    try {
+      const decoded = jwtDecode<JwtPayload>(token);
+      return decoded.role?.toLowerCase() === "supervisor";
+    } catch {
+      return false;
+    }
+  }, []);
   const params = useParams();
+  const projectId = params.id;
 
   const [activeTab, setActiveTab] = useState("project");
-  const [workLogEntries, setWorkLogEntries] = useState<WorkLogEntry[]>([
-    {
-      id: 1,
-      date: "2024-01-15",
-      task: "Initial project setup and requirements gathering",
-    },
-    { id: 2, date: "2024-01-20", task: "Database design and schema creation" },
-    { id: 3, date: "2024-01-25", task: "Frontend component development" },
-  ]);
+
+  const [workLogEntries, setWorkLogEntries] = useState<WorkLogEntry[]>([]);
+
   const [newDate, setNewDate] = useState("");
   const [newTask, setNewTask] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
 
-  // Comments state
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState("");
-
-  // Members state
-  const [members, setMembers] = useState<Member[]>([]);
-  const [supervisors, setSupervisors] = useState<Member[]>([]);
-  const [students, setStudents] = useState<Member[]>([]);
-
-  // Sample project data based on projectId
-  const { id: projectId } = useParams(); // projectId comes from the route
   const [currentProject, setCurrentProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -187,73 +163,142 @@ export default function ProjectPage() {
 
     fetchProject();
   }, [projectId]);
+    const fetchTasks = async () => {
+    console.log("called");
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/tasks/project/${projectId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Cache-Control": "no-cache", // ask for fresh data
+            Pragma: "no-cache",
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch work logs");
+
+      const data = await res.json();
+      console.log("Raw tasks from backend:", data);
+
+      const formatted = data.map((item: any) => ({
+        id: item.taskID,
+        author: item.username,
+        task: item.taskText, // renamed for UI consistency
+        date: new Date(item.createdAt).toLocaleDateString(), // just the date part
+      }));
+
+      console.log("Formatted tasks:", formatted);
+
+      setWorkLogEntries(formatted);
+    } catch (err) {
+      console.error("Error fetching work logs:", err);
+    }
+  };
+
+    useEffect(() => {
+    if (!projectId) return;
+    fetchTasks();
+  }, [projectId]);
 
   if (loading) return <p>Loading...</p>;
   if (!currentProject) return <p>Project not found.</p>;
 
   async function handleChangeStatus() {
-  if (!projectId) {
-    alert("Project ID is missing");
-    return;
-  }
-
-  let nextStatus: string | null = null;
-
-  switch (currentProject.status) {
-    case "Pending":
-      nextStatus = "Approve";
-      break;
-    case "Approve":
-      nextStatus = "Complete";
-      break;
-    default:
-      nextStatus = null; // no change for Complete or others
-  }
-
-  if (!nextStatus) return; // no update needed
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("You are not authenticated.");
+    if (!projectId) {
+      alert("Project ID is missing");
       return;
     }
 
-    const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ status: nextStatus }),
-    });
+    let nextStatus: string | null = null;
 
-    if (!res.ok) {
-      throw new Error("Failed to update project status");
+    switch (currentProject.status) {
+      case "Pending":
+        nextStatus = "Approve";
+        break;
+      case "Approve":
+        nextStatus = "Complete";
+        break;
+      default:
+        nextStatus = null; // no change for Complete or others
     }
 
-    alert(`Status updated to ${nextStatus}`);
+    if (!nextStatus) return; // no update needed
 
-    // Optionally update local state so UI updates immediately:
-    setCurrentProject((prev: any) => prev ? { ...prev, status: nextStatus } : prev);
-  } catch (error) {
-    console.error(error);
-    alert("An error occurred while updating status");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You are not authenticated.");
+        return;
+      }
+
+      const res = await fetch(
+        `http://localhost:5000/api/projects/${projectId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: nextStatus }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update project status");
+      }
+
+      alert(`Status updated to ${nextStatus}`);
+
+      // Optionally update local state so UI updates immediately:
+      setCurrentProject((prev: any) =>
+        prev ? { ...prev, status: nextStatus } : prev
+      );
+    } catch (error) {
+      console.error(error);
+      alert("An error occurred while updating status");
+    }
   }
-}
 
+  const handleAddWorkLog = async () => {
+    if (!newDate || !newTask.trim()) return;
 
-  const handleAddWorkLog = () => {
-    if (newDate && newTask) {
-      const newEntry: WorkLogEntry = {
-        id: Date.now(),
-        date: newDate,
-        task: newTask,
-      };
-      setWorkLogEntries([...workLogEntries, newEntry]);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("You must be logged in to add a work log.");
+      return;
+    }
+
+    const decoded = jwtDecode<JwtPayload>(token);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/tasks/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userID: decoded.userID,
+          projectID: projectId,
+          date: newDate,
+          taskText: newTask.trim(),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to add work log");
+
+      // Clear input fields on success
       setNewDate("");
       setNewTask("");
+      console.log("hel");
+
+      fetchTasks();
       setShowAddForm(false);
+    } catch (error) {
+      console.error("Error adding work log:", error);
+      alert("Failed to add work log. Please try again.");
     }
   };
 
@@ -273,16 +318,18 @@ export default function ProjectPage() {
       case "worklog":
         return (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Work Log</h3>
-              <Button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="bg-teal-600 hover:bg-teal-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Entry
-              </Button>
-            </div>
+            {currentProject.status !== "Complete"&& !isCurrentUserSupervisor && (
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Work Log</h3>
+                <Button
+                  onClick={() => setShowAddForm(!showAddForm)}
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Entry
+                </Button>
+              </div>
+            )}
 
             {showAddForm && (
               <Card className="bg-gray-50">
@@ -334,11 +381,17 @@ export default function ProjectPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-1/3 font-medium text-gray-900 bg-gray-50">
+                      <TableHead className="w-[50px] font-medium text-gray-900 bg-gray-50">
+                        S.N.
+                      </TableHead>
+                      <TableHead className="w-1/4 font-medium text-gray-900 bg-gray-50">
                         Date
                       </TableHead>
                       <TableHead className="font-medium text-gray-900 bg-gray-50">
                         Task
+                      </TableHead>
+                      <TableHead className="w-1/4 font-medium text-gray-900 bg-gray-50">
+                        Author
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -346,19 +399,21 @@ export default function ProjectPage() {
                     {workLogEntries.length === 0 ? (
                       <TableRow>
                         <TableCell
-                          colSpan={2}
+                          colSpan={4}
                           className="text-center py-8 text-gray-500"
                         >
                           No work log entries yet
                         </TableCell>
                       </TableRow>
                     ) : (
-                      workLogEntries.map((entry) => (
+                      workLogEntries.map((entry, index) => (
                         <TableRow key={entry.id}>
-                          <TableCell className="font-medium">
-                            {entry.date}
+                          <TableCell className="text-center">
+                            {index + 1}
                           </TableCell>
+                          <TableCell>{entry.date}</TableCell>
                           <TableCell>{entry.task}</TableCell>
+                          <TableCell>{entry.author}</TableCell>
                         </TableRow>
                       ))
                     )}
@@ -382,12 +437,15 @@ export default function ProjectPage() {
   };
 
   return (
-    <Layout title={`Project: ${currentProject.name}`} userRole="Student">
+    <Layout
+      title={`Project: ${currentProject.name}`}
+      userRole={isCurrentUserSupervisor ? "Supervisor" : "Student"}
+    >
       <div className="max-w-4xl">
         <ProjectTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          userRole="Student"
+          userRole={isCurrentUserSupervisor ? "Supervisor" : "Student"}
         />
         {renderTabContent()}
       </div>

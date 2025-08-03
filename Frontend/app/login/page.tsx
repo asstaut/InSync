@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -41,7 +40,7 @@ export default function LoginPage() {
     // Store token (for later API calls)
     localStorage.setItem("token", data.token);
 
-    // Redirect to current projects
+    // Redirect to current projectss
     router.push("/current-projects");
   } catch (error) {
     console.error("Login error:", error);

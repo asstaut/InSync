@@ -1,11 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+  const router = useRouter()
+
 
 export default function SignUpPage() {
   const [username, setUsername] = useState("")
@@ -47,6 +50,8 @@ export default function SignUpPage() {
       }
 
       setSuccess("Signup successful! Redirecting to login...")
+      router.push("/login");
+
       setTimeout(() => {
         window.location.href = "/login"
       }, 2000)
