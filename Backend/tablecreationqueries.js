@@ -19,7 +19,7 @@ db.exec(`
     status TEXT NOT NULL,
     proposal BLOB NOT NULL,
     joinCode TEXT UNIQUE,
-    projectScore INTERGER
+    projectScore INTERGER DEFAULT 0
   );
 
   CREATE TABLE IF NOT EXISTS UserProject (
