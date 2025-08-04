@@ -1,5 +1,6 @@
 "use client";
 
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 import type React from "react";
 import { useState, useEffect } from "react";
 import { Layout } from "../../../components/layout";
@@ -37,6 +38,7 @@ interface WorkLogEntry {
 }
 
 export default function ProjectPage() {
+    const [title, setTitle] = useState('');
   const isCurrentUserSupervisor = useMemo(() => {
     if (typeof window === "undefined") return false;
     const token = localStorage.getItem("token");
@@ -56,7 +58,7 @@ export default function ProjectPage() {
 
   const [workLogEntries, setWorkLogEntries] = useState<WorkLogEntry[]>([]);
 
-  const [newDate, setNewDate] = useState("");
+  //const [newDate, setNewDate] = useState("");
   const [newTask, setNewTask] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -132,10 +134,11 @@ export default function ProjectPage() {
   useEffect(() => {
     if (!projectId) return;
 
+
     const fetchProject = async () => {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/projects/${projectId}`,
+          `${apiUrl}/api/projects/${projectId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -155,6 +158,8 @@ export default function ProjectPage() {
           proposal: data.proposal,
           score: data.projectScore,
         });
+            document.title = ("Project | " + data.projectTitle);
+
       } catch (error) {
         console.error("Error fetching project:", error);
         setCurrentProject(null);
@@ -169,7 +174,7 @@ export default function ProjectPage() {
     console.log("called");
     try {
       const res = await fetch(
-        `http://localhost:4000/api/tasks/project/${projectId}`,
+        `${apiUrl}/api/tasks/project/${projectId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -236,7 +241,7 @@ export default function ProjectPage() {
       }
 
       const res = await fetch(
-        `http://localhost:4000/api/projects/${projectId}`,
+        `${apiUrl}/api/projects/${projectId}`,
         {
           method: "PUT",
           headers: {
@@ -264,8 +269,8 @@ export default function ProjectPage() {
   }
 
   const handleAddWorkLog = async () => {
-    if (!newDate || !newTask.trim()) return;
-
+    //if (!newDate || !newTask.trim()) return;
+    if (!newTask.trim()) return;
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to add a work log.");
@@ -275,7 +280,7 @@ export default function ProjectPage() {
     const decoded = jwtDecode<JwtPayload>(token);
 
     try {
-      const res = await fetch("http://localhost:4000/api/tasks/", {
+      const res = await fetch(`${apiUrl}/api/tasks/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -284,7 +289,7 @@ export default function ProjectPage() {
         body: JSON.stringify({
           userID: decoded.userID,
           projectID: projectId,
-          date: newDate,
+          //date: newDate,
           taskText: newTask.trim(),
         }),
       });
@@ -292,7 +297,7 @@ export default function ProjectPage() {
       if (!res.ok) throw new Error("Failed to add work log");
 
       // Clear input fields on success
-      setNewDate("");
+      //setNewDate("");
       setNewTask("");
       console.log("hel");
 
@@ -337,7 +342,7 @@ export default function ProjectPage() {
               <Card className="bg-gray-50">
                 <CardContent className="p-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Date
                       </label>
@@ -347,7 +352,7 @@ export default function ProjectPage() {
                         onChange={(e) => setNewDate(e.target.value)}
                         className="bg-white"
                       />
-                    </div>
+                    </div> */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Task

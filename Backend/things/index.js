@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const authenticateToken = require('./middleware/auth');
 app.use(cors());
 app.use(express.json());
+require('dotenv').config();
 
 
 
@@ -24,5 +25,5 @@ app.use('/api/user-projects', require('./routes/userproject'));
 
 
 
-app.listen(4000,() => console.log('Server running on port 5000'));
+app.listen(4000,() => console.log('Server running on port 4000'));
 

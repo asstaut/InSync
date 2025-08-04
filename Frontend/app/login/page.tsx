@@ -1,5 +1,5 @@
 "use client"
-
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import Image from "next/image"
-//import Head from "next/head";
+import Head from "next/head";
 
 export default function LoginPage() {
+  const [title, setTitle] = useState('');
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("")
@@ -19,11 +20,11 @@ export default function LoginPage() {
   useEffect(() => {
     document.title = "Login - InSync";
     setMounted(true);
-  }, [])
+  }, [title]);
 
   const handleLogin = async () => {
   try {
-    const res = await fetch("http://localhost:4000/api/login", {
+    const res = await fetch(`${apiUrl}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -56,8 +57,10 @@ export default function LoginPage() {
   }
 
   return (
-    
-    
+    <>
+      <Head>
+        <title>{title}</title>
+      </Head>
 
     <div className="min-h-screen bg-gradient-to-br from-teal-200 via-teal-100 to-blue-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-3xl relative">
@@ -146,6 +149,6 @@ export default function LoginPage() {
       </div>
     </div>
 
-
+</>
   )
 }

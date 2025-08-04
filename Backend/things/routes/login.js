@@ -5,7 +5,9 @@ const db = require('../db');
 const router = express.Router();
 
 // Secret key for JWT
-const JWT_SECRET = 'your-secret-key'; // Use a strong secret & store in .env
+const secret = process.env.JWT_SECRET;
+
+
 
 router.post('/', async (req, res) => {
   const { email, password } = req.body;
@@ -26,7 +28,7 @@ router.post('/', async (req, res) => {
 
     const token = jwt.sign(
       { userID: user.userid, email: user.email, username:user.username, role: user.Role },
-      JWT_SECRET,
+      secret,
       { expiresIn: '1h' }
     );
 

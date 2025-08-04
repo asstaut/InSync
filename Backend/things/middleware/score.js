@@ -42,6 +42,7 @@ function updateActivityScore(projectID) {
     const weeks = getWeeksSince(createdAt);
     const contributionCount = getTaskCount.get(projectID, userID).count; // must return { count }
 
+
     // Scoring logic with cap at 1 and tolerance of 1 week
     let score = 0;
     if ((weeks - contributionCount) === 1) {
@@ -51,11 +52,13 @@ function updateActivityScore(projectID) {
     }
 
     updateScore.run(score, userID, projectID); // Assumes updateScore is a prepared stmt
+    console.log(userID,weeks,contributionCount,score);
+
     projectScore += score;
   }
   console.log("loopend");
   const averageScore = students.length > 0 ? projectScore / students.length : 0;
-  updateProjectScore.run(averageScore, projectID); // Assumes prepared stmt
+  updateProjectScore.run(averageScore.toFixed(2), projectID); // Assumes prepared stmt
 }
 
 

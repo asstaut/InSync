@@ -1,4 +1,5 @@
 "use client";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useEffect, useState } from "react";
 import type React from "react";
 import { Layout } from "../../components/layout";
@@ -108,7 +109,7 @@ export default function CurrentProjectsPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/projects/", {
+        const res = await fetch(`${apiUrl}/projects/`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -164,7 +165,7 @@ export default function CurrentProjectsPage() {
       )
     ) {
       try {
-        const res = await fetch(`http://localhost:4000/api/projects/${projectId}`, {
+        const res = await fetch(`${apiUrl}/projects/${projectId}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -203,7 +204,7 @@ export default function CurrentProjectsPage() {
       const userID = decoded.userID;
       console.log("User ID from token:", userID);
 
-      const response = await fetch("http://localhost:4000/api/user-projects/join", {
+      const response = await fetch(`${apiUrl}/user-projects/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -227,6 +228,8 @@ export default function CurrentProjectsPage() {
   };
 
   return (
+  <>
+     <head><title>Current Projects</title></head>
     <Layout title="Current Projects">
       <div className="space-y-6 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -294,5 +297,6 @@ export default function CurrentProjectsPage() {
         </div>
       </div>
     </Layout>
+    </>
   );
 }

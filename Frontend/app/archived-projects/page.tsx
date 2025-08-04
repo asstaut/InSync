@@ -1,4 +1,7 @@
 "use client";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+
 import { useEffect, useState } from "react";
 import { Layout } from "../../components/layout";
 import { Button } from "@/components/ui/button";
@@ -96,7 +99,7 @@ export default function ArchivedProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/projects/completed", {
+        const res = await fetch(`${apiUrl}/projects/completed`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -144,8 +147,8 @@ export default function ArchivedProjects() {
         "Are you sure you want to delete this archived project? This action cannot be undone."
       )
     ) {
-      try {
-        const res = await fetch(`http://localhost:4000/api/projects/${projectId}`, {
+      try{
+        const res = await fetch(`${apiUrl}/projects/${projectId}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -179,7 +182,7 @@ export default function ArchivedProjects() {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/user-projects/join", {
+      const response = await fetch(`${apiUrl}/user-projects/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -203,6 +206,8 @@ export default function ArchivedProjects() {
   };
 
   return (
+    <>
+     <head><title>Archives</title></head>
     <Layout title="Archived Projects">
       <div className="space-y-6 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -267,6 +272,7 @@ export default function ArchivedProjects() {
         </div>
       </div>
     </Layout>
+    </>
   );
 }
 

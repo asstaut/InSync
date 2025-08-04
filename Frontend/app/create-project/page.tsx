@@ -1,5 +1,8 @@
 "use client"
 
+
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 import type React from "react"
 import { useEffect, useState } from "react"
 import { Layout } from "../../components/layout"
@@ -62,7 +65,7 @@ const handleCreateProject = async () => {
   formData.append("proposal", proposalFile) // ⬅ actual file content
 
   try {
-    const response = await fetch("http://localhost:4000/api/projects/", {
+    const response = await fetch(`${apiUrl}/api/projects/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ leave out 'Content-Type'!

@@ -10,7 +10,7 @@ import Link from "next/link"
 
 export default function SignUpPage() {
   const router = useRouter()
-
+  const [title, setTitle] = useState('Signup');
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -21,6 +21,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
 
   const handleSignUp = async () => {
+
     setError(null)
     setSuccess(null)
 
@@ -68,6 +69,8 @@ export default function SignUpPage() {
   }
 
   return (
+    <>
+    <head><title>Signup</title></head>
     <div className="min-h-screen bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
@@ -157,6 +160,7 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
