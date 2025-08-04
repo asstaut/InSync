@@ -37,7 +37,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
   const fetchComments = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/comments/project/${projectId}`,
+        `http://localhost:4000/api/comments/project/${projectId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -66,7 +66,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     const decoded = jwtDecode<JwtPayload>(token);
 
     try {
-      const res = await fetch("http://localhost:5000/api/comments/", {
+      const res = await fetch("http://localhost:4000/api/comments/", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -93,7 +93,7 @@ export function CommentSection({ projectId }: CommentSectionProps) {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/comments/${commentId}`, {
+      const res = await fetch(`http://localhost:4000/api/comments/${commentId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -158,11 +158,10 @@ export function CommentSection({ projectId }: CommentSectionProps) {
                       </span>
                       <Badge
                         variant="secondary"
-                        className={`text-xs ${
-                          comment.role === "supervisor"
+                        className={`text-xs ${comment.role === "supervisor"
                             ? "bg-blue-100 text-blue-800"
                             : "bg-green-100 text-green-800"
-                        }`}
+                          }`}
                       >
                         {comment.role}
                       </Badge>

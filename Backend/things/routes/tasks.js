@@ -1,9 +1,10 @@
 const express = require('express');
 const db = require('../db');
 const router = express.Router();
-
+const updateActivityScore= require('../middleware/score')
 // Create task
 router.post('/', (req, res) => {
+   console.log("haaaaaa");
   const { taskText, projectID, userID } = req.body;
    if (!taskText || !userID || !projectID) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -11,6 +12,8 @@ router.post('/', (req, res) => {
 
   const stmt = db.prepare('INSERT INTO TASK (taskText, projectID, userID) VALUES (?, ?, ?)');
   const result = stmt.run(taskText, projectID, userID);
+ 
+  updateActivityScore(projectID);
   res.json({ id: result.lastInsertRowid });
 });
 

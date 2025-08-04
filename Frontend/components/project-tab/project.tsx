@@ -13,6 +13,7 @@ interface Props {
     status: string;
     joinCode: string;
     proposal?: any;
+    score?: number;
   };
   onOpenProposal: () => void;
   isSupervisor: boolean;
@@ -31,6 +32,9 @@ export default function ProjectTab({ project, onOpenProposal,isSupervisor, onCha
               <h3 className="font-medium text-gray-900">{project.name}</h3>
               <p className="text-sm text-gray-600">
                 Join Code: {project.joinCode}
+              </p>
+              <p className="text-sm text-gray-600">
+                Project Score: {project.score}
               </p>
             </div>
           </div>

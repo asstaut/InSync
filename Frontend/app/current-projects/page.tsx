@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import type React from "react";
 import { Layout } from "../../components/layout";
@@ -24,6 +23,7 @@ interface ProjectCardWithMenuProps {
   onArchive: (projectId: string) => void;
   onDelete: (projectId: string) => void;
   isSupervisor: boolean;
+
 }
 
 type JwtPayload = {
@@ -61,7 +61,9 @@ function ProjectCardWithMenu({
       className="bg-teal-50 border-teal-200 relative cursor-pointer hover:shadow-md transition-shadow"
       onClick={handleCardClick}
     >
+     
       <CardContent className="p-4">
+         {isSupervisor && (
         <div className="absolute top-2 right-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -79,18 +81,17 @@ function ProjectCardWithMenu({
                 <Archive className="w-4 h-4 mr-2" />
                 Archive
               </DropdownMenuItem>
-              {isSupervisor && (
-                <DropdownMenuItem
-                  onClick={handleDelete}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                onClick={handleDelete}
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
         <div className="text-center">
           <h3 className="font-medium text-gray-900">{title}</h3>
           <p className="text-sm text-gray-600 mt-1">{semester}</p>
@@ -111,7 +112,7 @@ export default function CurrentProjectsPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/projects/", {
+        const res = await fetch("http://localhost:4000/api/projects/", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -133,13 +134,15 @@ export default function CurrentProjectsPage() {
     };
 
     const checkRole = () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const decoded = jwtDecode<JwtPayload>(token);
-          setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
-        } catch (err) {
-          console.error("Failed to decode token", err);
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const decoded = jwtDecode<JwtPayload>(token);
+            setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
+          } catch (err) {
+            console.error("Failed to decode token", err);
+          }
         }
       }
     };
@@ -154,41 +157,35 @@ export default function CurrentProjectsPage() {
 
   const handleArchiveProject = (projectId: string) => {
     setProjects(projects.filter((project) => project.projectId !== projectId));
+
     alert("Project archived successfully!");
   };
 
   const handleDeleteProject = async (projectId: string) => {
     if (
-      !window.confirm(
+      window.confirm(
         "Are you sure you want to delete this project? This action cannot be undone."
       )
-    )
-      return;
+    ) {
+      try {
+        const res = await fetch(`http://localhost:4000/api/projects/${projectId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Unauthorized");
-      return;
-    }
+        if (!res.ok) throw new Error("Failed to delete project");
 
-    try {
-      const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        setProjects((prev) =>
+          prev.filter((project) => project.projectId !== projectId)
+        );
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to delete project");
+        alert("Project deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting project:", error);
+        alert("Failed to delete project.");
       }
-
-      setProjects(projects.filter((p) => p.projectId !== projectId));
-      alert("Project deleted successfully!");
-    } catch (error) {
-      console.error("Delete error:", error);
-      alert("Error deleting project. Check console for details.");
     }
   };
 
@@ -205,11 +202,16 @@ export default function CurrentProjectsPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/user-projects/join", {
+      // Optional: decode userID if you want to use it locally (not mandatory for this request)
+      const decoded = jwtDecode<{ userID: number }>(token);
+      const userID = decoded.userID;
+      console.log("User ID from token:", userID);
+
+      const response = await fetch("http://localhost:4000/api/user-projects/join", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`, // assuming your backend uses Bearer token in header for authenticateToken middleware
         },
         body: JSON.stringify({ joinCode }),
       });
@@ -298,4 +300,3 @@ export default function CurrentProjectsPage() {
     </Layout>
   );
 }
-

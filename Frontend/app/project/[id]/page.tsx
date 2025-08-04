@@ -135,10 +135,11 @@ export default function ProjectPage() {
     const fetchProject = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/api/projects/${projectId}`,
+          `http://localhost:4000/api/projects/${projectId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Cache-Control": "no-cache",
             },
           }
         );
@@ -152,6 +153,7 @@ export default function ProjectPage() {
           status: data.status,
           joinCode: data.joinCode,
           proposal: data.proposal,
+          score: data.projectScore,
         });
       } catch (error) {
         console.error("Error fetching project:", error);
@@ -167,7 +169,7 @@ export default function ProjectPage() {
     console.log("called");
     try {
       const res = await fetch(
-        `http://localhost:5000/api/tasks/project/${projectId}`,
+        `http://localhost:4000/api/tasks/project/${projectId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -234,7 +236,7 @@ export default function ProjectPage() {
       }
 
       const res = await fetch(
-        `http://localhost:5000/api/projects/${projectId}`,
+        `http://localhost:4000/api/projects/${projectId}`,
         {
           method: "PUT",
           headers: {
@@ -273,7 +275,7 @@ export default function ProjectPage() {
     const decoded = jwtDecode<JwtPayload>(token);
 
     try {
-      const res = await fetch("http://localhost:5000/api/tasks/", {
+      const res = await fetch("http://localhost:4000/api/tasks/", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

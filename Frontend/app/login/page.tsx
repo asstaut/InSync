@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import Image from "next/image"
+//import Head from "next/head";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -16,12 +17,13 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    setMounted(true)
+    document.title = "Login - InSync";
+    setMounted(true);
   }, [])
 
   const handleLogin = async () => {
   try {
-    const res = await fetch("http://localhost:5000/api/login", {
+    const res = await fetch("http://localhost:4000/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -54,6 +56,9 @@ export default function LoginPage() {
   }
 
   return (
+    
+    
+
     <div className="min-h-screen bg-gradient-to-br from-teal-200 via-teal-100 to-blue-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-3xl relative">
         <div className="absolute right-15 top-1/2 -translate-y-1/2">
@@ -127,9 +132,9 @@ export default function LoginPage() {
           </Button>
 
           <div className="text-center space-y-2 max-w-sm">
-            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+            {/* <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
               Forgot Password?
-            </Link>
+            </Link> */}
             <p className="text-sm text-gray-600">
               Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-blue-600 hover:underline font-medium">
@@ -140,5 +145,7 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+
+
   )
 }

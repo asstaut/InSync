@@ -96,7 +96,7 @@ export default function ArchivedProjects() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/projects/completed", {
+        const res = await fetch("http://localhost:4000/api/projects/completed", {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -145,7 +145,7 @@ export default function ArchivedProjects() {
       )
     ) {
       try {
-        const res = await fetch(`http://localhost:5000/api/projects/${projectId}`, {
+        const res = await fetch(`http://localhost:4000/api/projects/${projectId}`, {
           method: "DELETE",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -179,7 +179,7 @@ export default function ArchivedProjects() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/user-projects/join", {
+      const response = await fetch("http://localhost:4000/api/user-projects/join", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

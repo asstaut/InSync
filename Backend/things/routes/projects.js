@@ -107,6 +107,7 @@ router.get('/completed', authenticateToken, (req, res) => {
 
 router.get('/:id', (req, res) => {
   const row = db.prepare('SELECT * FROM PROJECT WHERE projectID = ?').get(req.params.id);
+  console.log(row);
   res.json(row);
 });
 
@@ -138,9 +139,9 @@ router.delete('/:id', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    if (project.status !== 'Complete') {
-      return res.status(403).json({ error: 'Only archived (completed) projects can be deleted.' });
-    }
+    // if (project.status !== 'Complete') {
+    //   return res.status(403).json({ error: 'Only archived (completed) projects can be deleted.' });
+    // }
 
     // Confirm user is part of the project
     const isMember = db.prepare('SELECT * FROM UserProject WHERE userID = ? AND projectID = ?').get(userID, projectID);
@@ -150,6 +151,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
     }
 
     // Delete related records
+    db.prepare('DELETE FROM TASK WHERE projectID = ?').run(projectID);
     db.prepare('DELETE FROM COMMENT WHERE projectID = ?').run(projectID);
     db.prepare('DELETE FROM UserProject WHERE projectID = ?').run(projectID);
     db.prepare('DELETE FROM PROJECT WHERE projectID = ?').run(projectID);

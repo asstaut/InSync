@@ -27,7 +27,7 @@ export const MembersSection = ({ projectId, isSupervisor }: MembersSectionProps)
     const fetchMembers = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/user-projects/project/${projectId}`,
+          `http://localhost:4000/api/user-projects/project/${projectId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -61,7 +61,7 @@ export const MembersSection = ({ projectId, isSupervisor }: MembersSectionProps)
       const token = localStorage.getItem("token");
       if (!token) return alert("Login required");
 
-      const res = await fetch("http://localhost:5000/api/user-projects/", {
+      const res = await fetch("http://localhost:4000/api/user-projects/", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
