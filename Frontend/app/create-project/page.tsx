@@ -3,6 +3,7 @@
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+import { useRouter } from "next/navigation";
 import type React from "react"
 import { useEffect, useState } from "react"
 import { Layout } from "../../components/layout"
@@ -11,11 +12,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus} from "lucide-react"
+import { Plus, Router} from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getUserIDFromToken } from "../../lib/token"
 
-
+const router=useRouter();
 export default function CreateProjectPage() {
   const [activeTab] = useState("project")
   const [projectTitle, setProjectName] = useState("")
@@ -76,6 +77,8 @@ const handleCreateProject = async () => {
     if (response.ok) {
       const data = await response.json()
       alert("Project created successfully! Join Code: " + data.joinCode)
+       router.push(`/current-projects/}`);
+
     } else {
       const err = await response.text()
       alert("Error: " + err)

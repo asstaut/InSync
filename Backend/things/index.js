@@ -7,6 +7,8 @@ app.use(cors());
 app.use(express.json());
 require('dotenv').config();
 
+const port = process.env.PORT;
+
 
 
 app.use(morgan('dev'));
@@ -24,6 +26,5 @@ app.use('/api/tasks', require('./routes/tasks'));
 app.use('/api/user-projects', require('./routes/userproject'));
 
 
-
-app.listen(4000,() => console.log('Server running on port 4000'));
+app.listen(port,() => console.log('Server running on port 4000'));
 

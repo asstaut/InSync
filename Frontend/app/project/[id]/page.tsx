@@ -138,7 +138,7 @@ export default function ProjectPage() {
     const fetchProject = async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/projects/${projectId}`,
+          `${apiUrl}/projects/${projectId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -174,7 +174,7 @@ export default function ProjectPage() {
     console.log("called");
     try {
       const res = await fetch(
-        `${apiUrl}/api/tasks/project/${projectId}`,
+        `${apiUrl}/tasks/project/${projectId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -241,7 +241,7 @@ export default function ProjectPage() {
       }
 
       const res = await fetch(
-        `${apiUrl}/api/projects/${projectId}`,
+        `${apiUrl}/projects/${projectId}`,
         {
           method: "PUT",
           headers: {
@@ -280,7 +280,7 @@ export default function ProjectPage() {
     const decoded = jwtDecode<JwtPayload>(token);
 
     try {
-      const res = await fetch(`${apiUrl}/api/tasks/`, {
+      const res = await fetch(`${apiUrl}/tasks/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
