@@ -66,7 +66,7 @@ const handleCreateProject = async () => {
   formData.append("proposal", proposalFile) // ⬅ actual file content
 
   try {
-    const response = await fetch(`${apiUrl}/api/projects/`, {
+    const response = await fetch(`${apiUrl}/projects/`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`, // ✅ leave out 'Content-Type'!

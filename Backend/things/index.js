@@ -16,7 +16,6 @@ app.use(morgan('dev'));
 app.use('/api/register', require('./routes/register'));
 app.use('/api/login', require('./routes/login'));
 
-
 app.use(authenticateToken);
 
 app.use('/api/users', require('./routes/users'));

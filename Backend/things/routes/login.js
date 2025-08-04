@@ -8,7 +8,6 @@ const router = express.Router();
 const secret = process.env.JWT_SECRET;
 
 
-
 router.post('/', async (req, res) => {
   const { email, password } = req.body;
 
@@ -24,7 +23,7 @@ router.post('/', async (req, res) => {
     if (!match) {
       return res.status(400).json({ error: 'Invalid email or password' });
     }
-    console.log(user);
+
 
     const token = jwt.sign(
       { userID: user.userid, email: user.email, username:user.username, role: user.Role },

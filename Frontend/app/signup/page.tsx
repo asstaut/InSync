@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import Image from"next/image"
 
 export default function SignUpPage() {
   const router = useRouter()
-  const [title, setTitle] = useState('Signup');
+  //const [title, setTitle] = useState('Signup');
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -71,30 +72,44 @@ export default function SignUpPage() {
   return (
     <>
     <head><title>Signup</title></head>
-    <div className="min-h-screen bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center p-4">
+
+   <div className="min-h-screen bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-lg p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <div className="relative">
-              <div className="w-16 h-16 bg-teal-400 rounded-full opacity-80"></div>
+              {/* <div className="w-16 h-16 bg-teal-400 rounded-full opacity-80"></div>
               <div className="w-14 h-14 bg-teal-400 rounded-full absolute -top-2 -left-2 opacity-90"></div>
-              <div className="w-12 h-12 bg-teal-500 rounded-full absolute top-1 left-1 opacity-100"></div>
+              <div className="w-12 h-12 bg-teal-500 rounded-full absolute top-1 left-1 opacity-100"></div> */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
+                {/* <div className="w-6 h-6 border-2 border-white rounded-full flex items-center justify-center">
                   <div className="w-3 h-3 border border-white rounded-full relative">
                     <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 border border-white rounded-full"></div>
                     <div className="absolute -bottom-0.5 -left-0.5 w-1.5 h-1.5 border border-white rounded-full"></div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>
+          <div className="text-center mb-1">
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image 
+              src="/image.png" 
+              alt="InSync Logo" 
+              width={150} 
+              height={150}
+              className="object-contain mx-auto"
+            />
+          </div>
+          </div>
+
           <h1 className="text-2xl font-semibold text-gray-900">Insync</h1>
-        </div>
+        </div>          
 
         <div className="space-y-4">
+
           <Input
-            type="text"
+            type="username"
             placeholder="Enter your username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
@@ -146,9 +161,8 @@ export default function SignUpPage() {
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg mt-6"
             onClick={handleSignUp}
-            disabled={loading}
           >
-            {loading ? "Signing up..." : "Sign Up"}
+            Sign Up
           </Button>
 
           <p className="text-center text-sm text-gray-600 mt-4">
@@ -160,6 +174,7 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
+
     </>
   )
 }
