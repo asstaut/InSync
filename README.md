@@ -14,9 +14,18 @@ in Frontend/.env
 NEXT_PUBLIC_API_URL=<insert link of the backend api url>
 example URL - http://localhost:4000/api
 
-
+<!-- 
 2.Go to the terminal , open the project directory and run 
- node start.js 
+ node start.js  -->
+
+
+2. Open two terminals at the project directory, and run 
+    cd Backend
+    node Backend/things/index
+
+    and
+    cd Frontend
+    npm run dev --prefix 
 
 
 

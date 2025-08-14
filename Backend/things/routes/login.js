@@ -1,13 +1,18 @@
+require('dotenv').config();
+const secret = process.env.JWT_SECRET;
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const router = express.Router();
 
+
+console.log("JWT_SECRET in login:", secret); //
+
 // Secret key for JWT
-const secret = process.env.JWT_SECRET;
 
-
+if(!secret)
+{console.log("1");}
 router.post('/', async (req, res) => {
   const { email, password } = req.body;
 

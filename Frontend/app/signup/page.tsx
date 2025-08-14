@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import Image from"next/image"
+import { Eye, EyeOff } from "lucide-react"
+
 
 export default function SignUpPage() {
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   //const [title, setTitle] = useState('Signup');
   const [username, setUsername] = useState("")
@@ -123,22 +126,45 @@ export default function SignUpPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="bg-gray-50 border-gray-200 placeholder:text-gray-500"
           />
+{/* Password Input with Toggle */}
+<div className="relative">
+  <Input
+    type={showPassword ? "text" : "password"}
+    placeholder="Create password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    className="bg-gray-50 border-gray-200 placeholder:text-gray-500 pr-10"
+  />
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+  >
+    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </button>
+</div>
 
-          <Input
-            type="password"
-            placeholder="Create password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-gray-50 border-gray-200 placeholder:text-gray-500"
-          />
+{/* Confirm Password Input with Toggle */}
+<div className="relative">
+  <Input
+    type={showPassword ? "text" : "password"}
+    placeholder="Confirm password"
+    value={confirmPassword}
+    onChange={(e) => setConfirmPassword(e.target.value)}
+    className="bg-gray-50 border-gray-200 placeholder:text-gray-500 pr-10"
+  />
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+  >
+    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </button>
+</div>
 
-          <Input
-            type="password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="bg-gray-50 border-gray-200 placeholder:text-gray-500"
-          />
+
+
+
 
           <div>
             <Label htmlFor="role" className="text-sm text-gray-600 mb-2 block">

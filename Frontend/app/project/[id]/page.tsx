@@ -38,6 +38,7 @@ interface WorkLogEntry {
 }
 
 export default function ProjectPage() {
+
     const [title, setTitle] = useState('');
   const isCurrentUserSupervisor = useMemo(() => {
     if (typeof window === "undefined") return false;
@@ -64,6 +65,7 @@ export default function ProjectPage() {
 
   const [currentProject, setCurrentProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
 
   const openProposalFromBuffer = () => {
     if (!currentProject?.proposal) {
@@ -133,9 +135,9 @@ export default function ProjectPage() {
 
   useEffect(() => {
     if (!projectId) return;
-
-
-    const fetchProject = async () => {
+    fetchProject();
+  }, [projectId]);
+      const fetchProject = async () => {
       try {
         const res = await fetch(
           `${apiUrl}/projects/${projectId}`,
@@ -168,8 +170,7 @@ export default function ProjectPage() {
       }
     };
 
-    fetchProject();
-  }, [projectId]);
+
     const fetchTasks = async () => {
     console.log("called");
     try {
@@ -302,6 +303,8 @@ export default function ProjectPage() {
       console.log("hel");
 
       fetchTasks();
+      fetchProject();
+
       setShowAddForm(false);
     } catch (error) {
       console.error("Error adding work log:", error);

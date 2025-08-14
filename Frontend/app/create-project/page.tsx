@@ -16,8 +16,9 @@ import { Plus, Router} from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getUserIDFromToken } from "../../lib/token"
 
-const router=useRouter();
 export default function CreateProjectPage() {
+  const router=useRouter();
+
   const [activeTab] = useState("project")
   const [projectTitle, setProjectName] = useState("")
   const [projectDetails, setProjectDetails] = useState("")
@@ -77,7 +78,7 @@ const handleCreateProject = async () => {
     if (response.ok) {
       const data = await response.json()
       alert("Project created successfully! Join Code: " + data.joinCode)
-       router.push(`/current-projects/}`);
+       router.push(`/current-projects/`);
 
     } else {
       const err = await response.text()

@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import Image from "next/image"
+import { Eye, EyeOff } from "lucide-react";
 import Head from "next/head";
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const [title, setTitle] = useState('');
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -95,20 +97,30 @@ export default function LoginPage() {
               />
             </div>
 
-            <div>
-              <Label htmlFor="password" className="text-sm text-gray-600 mb-2 block">
-                Password
-              </Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-10 px-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-w-sm"
-                autoComplete="current-password"
-              />
-            </div>
+           <div>
+  <Label htmlFor="password" className="text-sm text-gray-600 mb-2 block">
+    Password
+  </Label>
+  <div className="relative max-w-sm">
+    <Input
+      id="password"
+      name="password"
+      type={showPassword ? "text" : "password"}
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+      className="w-full h-10 px-3 pr-12 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      autoComplete="current-password"
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+    >
+      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+  </div>
+</div>
+
             {/*
              <div>
               <Label htmlFor="role" className="text-sm text-gray-600 mb-2 block">

@@ -107,7 +107,25 @@ export default function CurrentProjectsPage() {
   const [isSupervisor, setIsSupervisor] = useState(false);
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    
+    const checkRole = () => {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const decoded = jwtDecode<JwtPayload>(token);
+            setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
+          } catch (err) {
+            console.error("Failed to decode token", err);
+          }
+        }
+      }
+    };
+
+    fetchProjects();
+    checkRole();
+  }, []);
+  const fetchProjects = async () => {
       try {
         const res = await fetch(`${apiUrl}/projects/`, {
           headers: {
@@ -130,23 +148,6 @@ export default function CurrentProjectsPage() {
       }
     };
 
-    const checkRole = () => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
-        if (token) {
-          try {
-            const decoded = jwtDecode<JwtPayload>(token);
-            setIsSupervisor(decoded.role?.toLowerCase() === "supervisor");
-          } catch (err) {
-            console.error("Failed to decode token", err);
-          }
-        }
-      }
-    };
-
-    fetchProjects();
-    checkRole();
-  }, []);
 
   const handleAddProject = () => {
     router.push("/create-project");
@@ -179,7 +180,8 @@ export default function CurrentProjectsPage() {
         );
 
         alert("Project deleted successfully!");
-      } catch (error) {
+        fetchProjects()
+;      } catch (error) {
         console.error("Error deleting project:", error);
         alert("Failed to delete project.");
       }
@@ -217,6 +219,8 @@ export default function CurrentProjectsPage() {
 
       if (response.ok) {
         alert(data.message || "Joined project successfully!");
+        fetchProjects();
+
         setJoinCode("");
       } else {
         alert(data.error || "Failed to join project");
